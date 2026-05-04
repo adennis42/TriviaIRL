@@ -1,0 +1,508 @@
+/* TriviaIRL Design System — Cel-shaded dark UI */
+
+:root {
+  --yellow: #f5c800;
+  --orange: #ff6500;
+  --cyan: #00e5ff;
+  --magenta: #ff2d78;
+  --green: #4ade80;
+  --black: #0a0a0a;
+  --dark: #111111;
+  --panel: #181818;
+  --card: #1e1e1e;
+  --card-2: #242424;
+  --outline: #000000;
+  --text: #f0ede0;
+  --muted: #77776f;
+  --muted-2: #555550;
+}
+
+* { box-sizing: border-box; }
+
+.tirl {
+  font-family: 'Barlow', system-ui, sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.tirl, .tirl * { box-sizing: border-box; }
+
+/* ---------- Typography ---------- */
+.tirl .display, .tirl .ui-h, .tirl .btn, .tirl .num, .tirl .logo {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tirl .label, .tirl .tag, .tirl .meta {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.tirl .body {
+  font-family: 'Barlow', sans-serif;
+  font-weight: 400;
+}
+
+/* ---------- Logo ---------- */
+.tirl .logo-wm {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.tirl .logo-wm .y { color: var(--yellow); }
+.tirl .logo-wm .c { color: var(--cyan); }
+
+/* ---------- Phone frame ---------- */
+.tirl .phone {
+  width: 375px;
+  height: 812px;
+  background: var(--black);
+  border: 3px solid #000;
+  border-radius: 40px;
+  box-shadow: 6px 6px 0 #000;
+  overflow: hidden;
+  position: relative;
+  color: var(--text);
+}
+.tirl .phone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, #ffffff07 1px, transparent 1px);
+  background-size: 6px 6px;
+  pointer-events: none;
+  z-index: 1;
+}
+.tirl .phone-notch {
+  position: absolute;
+  top: 8px; left: 50%;
+  transform: translateX(-50%);
+  width: 110px; height: 26px;
+  background: #000;
+  border-radius: 14px;
+  z-index: 10;
+}
+.tirl .phone-inner {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 44px 18px 22px;
+  overflow: hidden;
+}
+
+/* ---------- Cards ---------- */
+.tirl .card {
+  background: var(--card);
+  border: 2.5px solid #000;
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 #000;
+  position: relative;
+}
+
+.tirl .card-deep {
+  position: relative;
+}
+.tirl .card-deep::before {
+  content: '';
+  position: absolute;
+  inset: 4px -4px -4px 4px;
+  background: #000;
+  border-radius: 4px;
+  z-index: 0;
+}
+.tirl .card-deep > * { position: relative; z-index: 1; }
+
+/* ---------- Buttons ---------- */
+.tirl .btn {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 3px solid #000;
+  border-radius: 3px;
+  padding: 12px 18px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  transition: transform 0.08s, box-shadow 0.08s;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.tirl .btn-primary {
+  background: var(--orange);
+  color: #000;
+  box-shadow: 4px 4px 0 #000;
+}
+.tirl .btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px; right: 3px;
+  height: 30%;
+  background: rgba(255,255,255,.22);
+  pointer-events: none;
+}
+.tirl .btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #000;
+}
+.tirl .btn-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.tirl .btn-yellow {
+  background: var(--yellow);
+  color: #000;
+  box-shadow: 4px 4px 0 #000;
+}
+.tirl .btn-yellow::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px; right: 3px;
+  height: 30%;
+  background: rgba(255,255,255,.28);
+  pointer-events: none;
+}
+
+.tirl .btn-cyan {
+  background: transparent;
+  color: var(--cyan);
+  border: 2.5px solid var(--cyan);
+  box-shadow: 3px 3px 0 var(--cyan);
+}
+
+.tirl .btn-danger {
+  background: var(--magenta);
+  color: #000;
+  box-shadow: 4px 4px 0 #000;
+}
+
+.tirl .btn-ghost {
+  background: var(--panel);
+  color: var(--text);
+  border: 2.5px solid #000;
+  box-shadow: 3px 3px 0 #000;
+}
+
+.tirl .btn-disabled {
+  background: #2a2a28;
+  color: #5a5a55;
+  border: 2.5px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  cursor: not-allowed;
+}
+.tirl .btn-disabled::after { display: none; }
+
+.tirl .btn-block { width: 100%; padding: 16px; font-size: 18px; }
+
+/* ---------- Pills/Badges ---------- */
+.tirl .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--yellow);
+  color: #000;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  border: 2px solid #000;
+  border-radius: 2px;
+  padding: 3px 10px;
+  box-shadow: 2px 2px 0 #000;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.tirl .pill-cyan { background: var(--cyan); }
+.tirl .pill-orange { background: var(--orange); }
+.tirl .pill-magenta { background: var(--magenta); }
+.tirl .pill-dark {
+  background: var(--panel);
+  color: var(--yellow);
+  border: 2px solid #000;
+}
+
+.tirl .tag-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--cyan);
+  border: 2px solid var(--cyan);
+  border-radius: 2px;
+  padding: 3px 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+/* ---------- Inputs ---------- */
+.tirl .input {
+  background: #0d0d0d;
+  border: 2px solid #000;
+  border-radius: 3px;
+  color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 12px 14px;
+  font-size: 16px;
+  width: 100%;
+  outline: none;
+}
+.tirl .input:focus, .tirl .input.focused {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px rgba(0,229,255,.2);
+}
+
+/* ---------- Avatars ---------- */
+.tirl .avatar {
+  width: 32px; height: 32px;
+  background: var(--orange);
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+.tirl .avatar.lg { width: 44px; height: 44px; font-size: 18px; }
+.tirl .avatar.sm { width: 26px; height: 26px; font-size: 11px; }
+.tirl .avatar.cyan { background: var(--cyan); }
+.tirl .avatar.yellow { background: var(--yellow); }
+.tirl .avatar.magenta { background: var(--magenta); }
+.tirl .avatar.green { background: var(--green); }
+
+/* ---------- Halftone + grid ---------- */
+.tirl .halftone {
+  background-image: radial-gradient(circle, #ffffff07 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+.tirl .grid-bg {
+  background-image:
+    linear-gradient(#ffffff04 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff04 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ---------- Corner brackets ---------- */
+.tirl .corners { position: relative; }
+.tirl .corners::before, .tirl .corners::after,
+.tirl .corners > .crn-tl, .tirl .corners > .crn-tr,
+.tirl .corners > .crn-bl, .tirl .corners > .crn-br {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border: 2px solid #2a2a2a;
+}
+.tirl .corners::before { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+.tirl .corners::after { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
+.tirl .corners .crn-bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
+.tirl .corners .crn-br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+
+/* ---------- Section divider ---------- */
+.tirl .divider { height: 3px; background: #000; }
+
+/* ---------- Host shell ---------- */
+.tirl .host-shell {
+  width: 1280px;
+  min-height: 820px;
+  background: var(--black);
+  border: 2.5px solid #000;
+  display: flex;
+  color: var(--text);
+  position: relative;
+  overflow: hidden;
+}
+.tirl .host-shell .halftone-bg {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, #ffffff07 1px, transparent 1px);
+  background-size: 6px 6px;
+  pointer-events: none;
+}
+
+.tirl .sidebar {
+  width: 220px;
+  background: var(--dark);
+  border-right: 3px solid #000;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+.tirl .side-logo { padding: 6px 22px 22px; font-size: 22px; }
+.tirl .side-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
+.tirl .side-nav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 13px;
+  color: var(--muted);
+  border-left: 3px solid transparent;
+  text-decoration: none;
+}
+.tirl .side-nav a.active {
+  color: var(--yellow);
+  background: #181818;
+  border-left-color: var(--yellow);
+}
+.tirl .side-nav a:hover:not(.active) { color: var(--text); }
+
+.tirl .side-foot {
+  margin-top: auto;
+  padding: 16px 16px 8px;
+  border-top: 2px solid #000;
+}
+
+.tirl .main {
+  flex: 1;
+  padding: 24px 28px;
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+/* ---------- Stat cells ---------- */
+.tirl .stat {
+  background: var(--panel);
+  border: 2.5px solid #000;
+  border-radius: 4px;
+  box-shadow: 4px 4px 0 #000;
+  padding: 14px 16px;
+}
+.tirl .stat .num { font-size: 32px; line-height: 1; color: var(--yellow); }
+.tirl .stat .cap {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ---------- Tables ---------- */
+.tirl .tbl { width: 100%; border-collapse: collapse; }
+.tirl .tbl th {
+  text-align: left;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 10px 12px;
+  border-bottom: 2px solid #000;
+  background: var(--dark);
+}
+.tirl .tbl td {
+  padding: 12px;
+  border-bottom: 1.5px solid #0a0a0a;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+}
+
+/* ---------- Misc ---------- */
+.tirl .checkmark-tile {
+  width: 22px; height: 22px;
+  background: var(--cyan);
+  border: 2px solid #000;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  color: #000;
+  font-weight: 900;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.tirl .progress {
+  height: 12px;
+  background: #0a0a0a;
+  border: 2px solid #000;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.tirl .progress > .fill {
+  height: 100%;
+  background: var(--yellow);
+  position: relative;
+}
+.tirl .progress > .fill::after {
+  content: '';
+  position: absolute;
+  top: 1px; left: 0; right: 0;
+  height: 3px;
+  background: rgba(255,255,255,0.35);
+}
+
+@keyframes tirl-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
+}
+.tirl .pulse-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: tirl-pulse 1.2s ease-in-out infinite;
+}
+
+/* eyebrow */
+.tirl .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--cyan);
+  border: 2px solid var(--cyan);
+  padding: 4px 10px;
+  border-radius: 2px;
+}
+
+/* answer letter tile */
+.tirl .ltile {
+  width: 28px; height: 28px;
+  background: var(--dark);
+  border: 2px solid #000;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--yellow);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.tirl .ltile.cyan { background: var(--cyan); color: #000; border-color: #000; }
+.tirl .ltile.green { background: var(--green); color: #000; }
+.tirl .ltile.magenta { background: var(--magenta); color: #000; }

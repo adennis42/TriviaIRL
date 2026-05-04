@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>TriviaIRL — Full Screen Set</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0a0a0a; }
+  body { font-family: 'Barlow', sans-serif; color: #f0ede0; }
+</style>
+</head>
+<body class="tirl">
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="player-screens.jsx"></script>
+<script type="text/babel" src="host-screens.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+function App() {
+  return (
+    <DesignCanvas title="TriviaIRL" subtitle="Full screen set · Player (mobile) + Host (desktop)">
+      <DCSection id="player-flow" title="Player UI · Mobile (375px)">
+        <DCArtboard id="p1-empty" label="P1 · Join — Empty" width={375} height={812}>
+          <P1Join />
+        </DCArtboard>
+        <DCArtboard id="p1-filled" label="P1 · Join — Filled" width={375} height={812}>
+          <P1Join filled />
+        </DCArtboard>
+        <DCArtboard id="p2" label="P2 · Name + Mode" width={375} height={812}>
+          <P2NameMode />
+        </DCArtboard>
+        <DCArtboard id="p3" label="P3 · Lobby" width={375} height={812}>
+          <P3Lobby />
+        </DCArtboard>
+        <DCArtboard id="p4-default" label="P4 · Question — Default" width={375} height={812}>
+          <P4Question />
+        </DCArtboard>
+        <DCArtboard id="p4-selected" label="P4 · Question — B Selected" width={375} height={812}>
+          <P4Question selectedDefault="B" />
+        </DCArtboard>
+        <DCArtboard id="p5" label="P5 · Locked / Waiting" width={375} height={812}>
+          <P5Locked />
+        </DCArtboard>
+        <DCArtboard id="p6-correct" label="P6 · Reveal — Correct" width={375} height={812}>
+          <P6Reveal correct />
+        </DCArtboard>
+        <DCArtboard id="p6-wrong" label="P6 · Reveal — Wrong" width={375} height={812}>
+          <P6Reveal correct={false} />
+        </DCArtboard>
+        <DCArtboard id="p7" label="P7 · Leaderboard" width={375} height={812}>
+          <P7Leaderboard />
+        </DCArtboard>
+        <DCArtboard id="p8" label="P8 · Game Over" width={375} height={812}>
+          <P8GameOver />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="host-flow" title="Host UI · Desktop (1280px)">
+        <DCArtboard id="h1" label="H1 · Host Dashboard" width={1280} height={820}>
+          <H1Dashboard />
+        </DCArtboard>
+        <DCArtboard id="h2" label="H2 · Create New Game" width={1280} height={820}>
+          <H2CreateGame />
+        </DCArtboard>
+        <DCArtboard id="h3" label="H3 · Host Lobby" width={1280} height={820}>
+          <H3HostLobby />
+        </DCArtboard>
+        <DCArtboard id="h4" label="H4 · Host Live — Question" width={1280} height={820}>
+          <H4HostLive />
+        </DCArtboard>
+        <DCArtboard id="h5" label="H5 · Host Reveal" width={1280} height={820}>
+          <H5HostReveal />
+        </DCArtboard>
+        <DCArtboard id="h6" label="H6 · Question Bank Manager" width={1280} height={820}>
+          <H6BankManager />
+        </DCArtboard>
+        <DCArtboard id="h7" label="H7 · OpenTDB Import Modal" width={1280} height={820}>
+          <H7ImportModal />
+        </DCArtboard>
+        <DCArtboard id="h8" label="H8 · Round Builder" width={1280} height={820}>
+          <H8RoundBuilder />
+        </DCArtboard>
+        <DCArtboard id="h9" label="H9 · End Game / Final Standings" width={1280} height={820}>
+          <H9HostEndGame />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
