@@ -178,3 +178,50 @@ export function subscribeToAnswers(gameId: string, cb: (answers: Answer[]) => vo
     cb(snap.docs.map((d) => d.data() as Answer));
   });
 }
+
+// ── Game creation ─────────────────────────────────────────────────────────
+
+export async function createGame(
+  hostId: string,
+  gameCode: string,
+  gameMode: import("@/types").GameMode,
+  rounds: import("@/types").RoundRef[],
+  plan: import("@/types").Plan
+): Promise<string> {
+  const game: import("@/types").Game = {
+    gameId: gameCode,
+    hostId,
+    status: "lobby",
+    gameMode,
+    currentRoundIndex: 0,
+    currentQuestionIndex: 0,
+    questionState: "waiting",
+    timerEndsAt: null,
+    rounds,
+    createdAt: Date.now(),
+    plan,
+  };
+  await setDoc(gameRef(gameCode), game);
+  return gameCode;
+}
+
+export async function updateGame(
+  gameId: string,
+  data: Partial<import("@/types").Game>
+): Promise<void> {
+  await updateDoc(gameRef(gameId), data as Record<string, unknown>);
+}
+
+// ── Player join ───────────────────────────────────────────────────────────
+
+export async function joinGame(
+  gameId: string,
+  player: import("@/types").Player
+): Promise<void> {
+  await setDoc(doc(playersRef(gameId), player.playerId), player);
+}
+
+export async function getGame(gameId: string): Promise<import("@/types").Game | null> {
+  const snap = await getDoc(gameRef(gameId));
+  return snap.exists() ? (snap.data() as import("@/types").Game) : null;
+}
