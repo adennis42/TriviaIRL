@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { getRounds, getHost, createGame } from "@/lib/firestore";
+import { getRounds, getHost, createGame, incrementGamesThisMonth } from "@/lib/firestore";
 import { generateUniqueCode } from "@/lib/gameHelpers";
 import { db } from "@/lib/firebase";
 import { Logo } from "@/components/shared/Logo";
@@ -71,6 +71,7 @@ export default function NewGamePage() {
       });
 
       await createGame(user.uid, code, gameMode, roundRefs, plan);
+      await incrementGamesThisMonth(user.uid);
       router.push(`/host/game/${code}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create game");

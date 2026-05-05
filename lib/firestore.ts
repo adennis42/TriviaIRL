@@ -225,3 +225,14 @@ export async function getGame(gameId: string): Promise<import("@/types").Game | 
   const snap = await getDoc(gameRef(gameId));
   return snap.exists() ? (snap.data() as import("@/types").Game) : null;
 }
+
+// ── Free tier gate helpers ─────────────────────────────────────────────────
+
+export async function incrementGamesThisMonth(hostId: string): Promise<void> {
+  const ref = hostRef(hostId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    const current = (snap.data() as import("@/types").Host).gamesThisMonth ?? 0;
+    await updateDoc(ref, { gamesThisMonth: current + 1 });
+  }
+}
