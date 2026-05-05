@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { subscribeToAnswers } from "@/lib/firestore";
-import type { Answer } from "@/types";
+import { useTriviaStore } from "@/store/gameStore";
 
 export function useAnswers(gameId: string | null) {
-  const [answers, setAnswers] = useState<Answer[]>([]);
+  const setAnswers = useTriviaStore((s) => s.setAnswers);
+  const answers    = useTriviaStore((s) => s.answers);
 
   useEffect(() => {
     if (!gameId) return;
     const unsub = subscribeToAnswers(gameId, setAnswers);
     return unsub;
-  }, [gameId]);
+  }, [gameId, setAnswers]);
 
   return { answers };
 }

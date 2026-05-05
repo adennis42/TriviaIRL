@@ -6,7 +6,8 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { useGame } from "@/lib/hooks/useGame";
 import { usePlayers } from "@/lib/hooks/usePlayers";
 import { useAnswers } from "@/lib/hooks/useAnswers";
-import { updateGame, getGame, getRound, getQuestions } from "@/lib/firestore";
+import { updateGame, getRound, getQuestions } from "@/lib/firestore";
+import { useTriviaStore, selectLeaderboard, selectAnswerDistribution } from "@/store/gameStore";
 import { Logo } from "@/components/shared/Logo";
 import { QRCodePanel } from "@/components/shared/QRCodePanel";
 import { Timer } from "@/components/shared/Timer";
@@ -17,9 +18,11 @@ export default function HostGamePage() {
   const router = useRouter();
   const params = useParams();
   const gameId = params?.gameId as string;
-  const { game, loading: gameLoading } = useGame(gameId);
+  const { game, gameLoading } = useGame(gameId);
   const { players } = usePlayers(gameId);
   const { answers } = useAnswers(gameId);
+  const leaderboard = useTriviaStore(selectLeaderboard);
+  const answerDistribution = useTriviaStore(selectAnswerDistribution);
 
   const [starting, setStarting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -68,7 +71,21 @@ export default function HostGamePage() {
   const handleOpenQuestion = async () => {
     if (!currentQ) return;
     const timerEndsAt = Date.now() + currentQ.timerSeconds * 1000;
-    await updateGame(gameId, { questionState: "open", timerEndsAt });
+    // Push question data (without correctAnswerIndex) so players can see the question
+    const questionData = {
+      questionId: currentQ.questionId,
+      questionText: currentQ.questionText,
+      options: currentQ.options,
+      pointValue: currentQ.pointValue,
+      timerSeconds: currentQ.timerSeconds,
+      category: currentQ.category,
+      // correctAnswerIndex intentionally omitted — added after reveal
+    };
+    await updateGame(gameId, {
+      questionState: "open",
+      timerEndsAt,
+      currentQuestionData: questionData,
+    } as Parameters<typeof updateGame>[1] & { currentQuestionData: unknown });
   };
 
   const handleCloseEarly = async () => {
@@ -97,7 +114,19 @@ export default function HostGamePage() {
           timerEndsAt: game.timerEndsAt ?? Date.now(),
         }),
       });
-      await updateGame(gameId, { questionState: "revealed" });
+      // Now safe to reveal correctAnswerIndex to players
+      await updateGame(gameId, {
+        questionState: "revealed",
+        currentQuestionData: {
+          questionId: currentQ.questionId,
+          questionText: currentQ.questionText,
+          options: currentQ.options,
+          pointValue: currentQ.pointValue,
+          timerSeconds: currentQ.timerSeconds,
+          category: currentQ.category,
+          correctAnswerIndex: currentQ.correctAnswerIndex,
+        },
+      } as Parameters<typeof updateGame>[1] & { currentQuestionData: unknown });
     } finally {
       setRevealing(false);
     }

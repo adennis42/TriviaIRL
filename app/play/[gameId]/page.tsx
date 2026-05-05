@@ -5,17 +5,18 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useGame } from "@/lib/hooks/useGame";
 import { joinGame } from "@/lib/firestore";
 import { db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
+import { useTriviaStore } from "@/store/gameStore";
 import { Logo } from "@/components/shared/Logo";
 import { Timer } from "@/components/shared/Timer";
-import type { Player, PlayerMode, Question } from "@/types";
+import type { Player, PlayerMode } from "@/types";
 
 function PlayerGameView() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const gameId = params?.gameId as string;
-  const { game, loading } = useGame(gameId);
+  const { game, gameLoading: loading } = useGame(gameId);
 
   const [playerName] = useState(searchParams.get("name") ?? "");
   const [mode, setMode] = useState<PlayerMode>("solo");
@@ -23,8 +24,13 @@ function PlayerGameView() {
   const [joined, setJoined] = useState(false);
   const [playerId] = useState(() => crypto.randomUUID());
   const [joining, setJoining] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [locked, setLocked] = useState(false);
+  const currentQuestion = useTriviaStore((s) => s.currentQuestion);
+  const selectedOption  = useTriviaStore((s) => s.selectedOptionIndex);
+  const locked          = useTriviaStore((s) => s.answerLocked);
+  const answerResult    = useTriviaStore((s) => s.lastAnswerResult);
+  const setSelectedOpt  = useTriviaStore((s) => s.setSelectedOption);
+  const setLocked       = useTriviaStore((s) => s.setAnswerLocked);
+  const setAnswerResult = useTriviaStore((s) => s.setAnswerResult);
   const [submitting, setSubmitting] = useState(false);
 
   // Track which question we've already submitted for
@@ -33,11 +39,28 @@ function PlayerGameView() {
   // Reset answer state when question changes
   useEffect(() => {
     if (game?.questionState === "waiting") {
-      setSelectedOption(null);
+      setSelectedOpt(null);
       setLocked(false);
+      setAnswerResult(null);
       submittedForRef.current = null;
     }
   }, [game?.currentQuestionIndex, game?.questionState]);
+
+  // Subscribe to own answer doc after reveal to get isCorrect + pointsEarned
+  useEffect(() => {
+    if (!gameId || !game || game.questionState !== "revealed" || !locked) return;
+    const answerKey = `${game.rounds[game.currentRoundIndex]?.roundId ?? ""}_q${game.currentQuestionIndex}_${playerId}`;
+    const ref = doc(db, "games", gameId, "answers", answerKey);
+    const unsub = onSnapshot(ref, (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data() as { isCorrect: boolean; pointsEarned: number };
+      if (data.pointsEarned !== undefined) {
+        setAnswerResult({ isCorrect: data.isCorrect, pointsEarned: data.pointsEarned });
+      }
+    });
+    return unsub;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game?.questionState]);
 
   useEffect(() => {
     if (!playerName) router.push("/play");
@@ -196,6 +219,7 @@ function PlayerGameView() {
         </div>
 
         {/* Waiting state */}
+        {/* Waiting */}
         {qState === "waiting" && (
           <div className="cel-card" style={{ background: "var(--panel)", borderRadius: 4, padding: "3rem 2rem", textAlign: "center" }}>
             <p style={{ fontFamily: "var(--font-rajdhani)", fontSize: "1.5rem", fontWeight: 600, color: "var(--muted)" }}>Get ready…</p>
@@ -203,50 +227,34 @@ function PlayerGameView() {
           </div>
         )}
 
-        {/* Open state — show question + answers */}
-        {(qState === "open" || qState === "closed") && (
+        {/* Open / Closed — show real question from store */}
+        {(qState === "open" || qState === "closed") && currentQuestion && (
           <>
             {game.timerEndsAt && (
               <div className="cel-card" style={{ background: "var(--panel)", borderRadius: 4, padding: "1rem 1.5rem", marginBottom: "1rem" }}>
-                <Timer timerEndsAt={game.timerEndsAt} totalSeconds={30} />
+                <Timer timerEndsAt={game.timerEndsAt} totalSeconds={currentQuestion.timerSeconds} />
               </div>
             )}
 
             <div className="cel-card" style={{ background: "var(--panel)", borderRadius: 4, padding: "1.25rem", marginBottom: "1rem" }}>
-              <p style={{ fontFamily: "var(--font-barlow)", fontSize: "1rem", lineHeight: 1.5 }}>
-                {/* We don't expose the full question text client-side in prod — just placeholder */}
-                <span style={{ color: "var(--muted)", fontSize: 13 }}>Question {game.currentQuestionIndex + 1}</span>
-              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem" }}>
+                <p style={{ fontFamily: "var(--font-barlow)", fontSize: "1rem", lineHeight: 1.5 }}>{currentQuestion.questionText}</p>
+                <span style={{ fontFamily: "var(--font-rajdhani)", fontSize: "1.25rem", fontWeight: 700, color: "var(--yellow)", flexShrink: 0 }}>{currentQuestion.pointValue}pts</span>
+              </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-              {["A", "B", "C", "D"].map((letter, i) => {
+              {currentQuestion.options.map((opt, i) => {
                 const isSelected = selectedOption === i;
+                const letters = ["A","B","C","D"];
                 return (
-                  <button
-                    key={i}
-                    onClick={() => { if (!locked && qState === "open") setSelectedOption(i); }}
+                  <button key={i}
+                    onClick={() => { if (!locked && qState === "open") setSelectedOpt(i); }}
                     disabled={locked || qState !== "open"}
                     className="cel-btn"
-                    style={{
-                      background: isSelected ? "#1a1a00" : "var(--panel)",
-                      border: `3px solid ${isSelected ? "var(--yellow)" : "#000"}`,
-                      color: isSelected ? "var(--yellow)" : "var(--text)",
-                      fontFamily: "var(--font-barlow-condensed)",
-                      fontSize: 16,
-                      fontWeight: 700,
-                      letterSpacing: "0.06em",
-                      padding: "18px 16px",
-                      borderRadius: 4,
-                      textAlign: "left",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.75rem",
-                      opacity: locked && !isSelected ? 0.4 : 1,
-                    }}
-                  >
-                    <span style={{ background: isSelected ? "var(--yellow)" : "var(--card)", color: isSelected ? "#000" : "var(--muted)", borderRadius: 2, padding: "2px 8px", fontFamily: "var(--font-rajdhani)", fontSize: 14, fontWeight: 700, minWidth: 28, textAlign: "center" }}>{letter}</span>
-                    Option {letter}
+                    style={{ background: isSelected ? "#1a1a00" : "var(--panel)", border: `3px solid ${isSelected ? "var(--yellow)" : "#000"}`, color: isSelected ? "var(--yellow)" : "var(--text)", fontFamily: "var(--font-barlow-condensed)", fontSize: 15, fontWeight: 700, letterSpacing: "0.04em", padding: "16px", borderRadius: 4, textAlign: "left", display: "flex", alignItems: "center", gap: "0.75rem", opacity: locked && !isSelected ? 0.4 : 1 }}>
+                    <span style={{ background: isSelected ? "var(--yellow)" : "var(--card)", color: isSelected ? "#000" : "var(--muted)", borderRadius: 2, padding: "2px 8px", fontFamily: "var(--font-rajdhani)", fontSize: 14, fontWeight: 700, minWidth: 28, textAlign: "center" }}>{letters[i]}</span>
+                    {opt}
                   </button>
                 );
               })}
@@ -261,23 +269,49 @@ function PlayerGameView() {
 
             {locked && (
               <div className="cel-card" style={{ background: "var(--panel)", borderRadius: 4, padding: "1.25rem", marginTop: "1rem", textAlign: "center" }}>
-                <p style={{ fontFamily: "var(--font-rajdhani)", fontSize: "1.25rem", fontWeight: 600, color: "var(--cyan)" }}>Answer locked in!</p>
+                <p style={{ fontFamily: "var(--font-rajdhani)", fontSize: "1.25rem", fontWeight: 600, color: "var(--cyan)" }}>Locked in! ✓</p>
                 <p style={{ color: "var(--muted)", fontFamily: "var(--font-barlow)", fontSize: 13, marginTop: 4 }}>Waiting for host to reveal…</p>
               </div>
             )}
           </>
         )}
 
-        {/* Revealed state */}
-        {qState === "revealed" && (
-          <div className="cel-card" style={{ background: "var(--panel)", borderRadius: 4, padding: "2rem", textAlign: "center" }}>
-            <p style={{ fontFamily: "var(--font-barlow-condensed)", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "0.5rem" }}>Answer Revealed</p>
-            <p style={{ fontFamily: "var(--font-rajdhani)", fontSize: "1.25rem", fontWeight: 600, color: "var(--yellow)" }}>
-              {locked ? "Your answer is locked in!" : "You didn't answer in time."}
-            </p>
-            <p style={{ color: "var(--muted)", fontFamily: "var(--font-barlow)", fontSize: 13, marginTop: "0.5rem" }}>
-              Waiting for next question…
-            </p>
+        {/* Revealed — show correct/wrong with real options */}
+        {qState === "revealed" && currentQuestion && (
+          <div>
+            {/* Result banner */}
+            {locked && (
+              <div className="cel-card" style={{ background: answerResult?.isCorrect ? "#002200" : "#1a0000", border: `2.5px solid ${answerResult?.isCorrect ? "var(--green)" : "var(--magenta)"}`, borderRadius: 4, padding: "1.25rem", marginBottom: "1rem", textAlign: "center" }}>
+                <p style={{ fontFamily: "var(--font-rajdhani)", fontSize: "1.75rem", fontWeight: 700, color: answerResult?.isCorrect ? "var(--green)" : "var(--magenta)" }}>
+                  {answerResult?.isCorrect ? "Correct! +" + answerResult.pointsEarned + " pts" : "Wrong answer"}
+                </p>
+              </div>
+            )}
+            {!locked && (
+              <div className="cel-card" style={{ background: "var(--panel)", borderRadius: 4, padding: "1.25rem", marginBottom: "1rem", textAlign: "center" }}>
+                <p style={{ fontFamily: "var(--font-rajdhani)", fontSize: "1.25rem", fontWeight: 600, color: "var(--muted)" }}>You didn't answer in time.</p>
+              </div>
+            )}
+
+            {/* Options with correct highlighted */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {currentQuestion.options.map((opt, i) => {
+                const isCorrect  = i === currentQuestion.correctAnswerIndex;
+                const isMyAnswer = i === selectedOption;
+                const letters    = ["A","B","C","D"];
+                let bg = "var(--card)"; let border = "#333"; let color = "var(--muted)";
+                if (isCorrect)  { bg = "#002200"; border = "var(--green)"; color = "var(--green)"; }
+                if (isMyAnswer && !isCorrect) { bg = "#1a0000"; border = "var(--magenta)"; color = "var(--magenta)"; }
+                return (
+                  <div key={i} style={{ background: bg, border: `2.5px solid ${border}`, borderRadius: 3, padding: "12px 16px", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <span style={{ background: "var(--card)", borderRadius: 2, padding: "2px 8px", fontFamily: "var(--font-rajdhani)", fontSize: 14, fontWeight: 700, color: "var(--muted)", minWidth: 28, textAlign: "center" }}>{letters[i]}</span>
+                    <span style={{ fontFamily: "var(--font-barlow-condensed)", fontSize: 14, fontWeight: 600, color }}>{opt}</span>
+                    {isCorrect && <span style={{ marginLeft: "auto", color: "var(--green)", fontSize: 16 }}>✓</span>}
+                  </div>
+                );
+              })}
+            </div>
+            <p style={{ color: "var(--muted)", fontFamily: "var(--font-barlow)", fontSize: 13, marginTop: "1rem", textAlign: "center" }}>Waiting for next question…</p>
           </div>
         )}
       </div>
