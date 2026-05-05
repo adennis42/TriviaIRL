@@ -1,21 +1,31 @@
-import { initializeApp, getApps, cert, App } from "firebase-admin/app";
+import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 
-function getAdminApp(): App {
-  if (getApps().length > 0) return getApps()[0];
+let _adminApp: App | null = null;
 
-  return initializeApp({
-    credential: cert({
-      projectId:   process.env.FIREBASE_ADMIN_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey:  process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    }),
-  });
+function getAdminApp(): App {
+  if (_adminApp) return _adminApp;
+  if (getApps().length > 0) { _adminApp = getApps()[0]; return _adminApp; }
+
+  const projectId   = process.env.FIREBASE_ADMIN_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+  const privateKey  = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error(
+      "Firebase Admin credentials not set. Add FIREBASE_ADMIN_PROJECT_ID, " +
+      "FIREBASE_ADMIN_CLIENT_EMAIL, and FIREBASE_ADMIN_PRIVATE_KEY to .env.local"
+    );
+  }
+
+  _adminApp = initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
+  return _adminApp;
 }
 
-const adminApp = getAdminApp();
+// Lazy exports — only initialized when actually called at runtime
+export const getAdminDb   = () => getFirestore(getAdminApp());
+export const getAdminAuth = () => getAuth(getAdminApp());
 
-export const adminDb   = getFirestore(adminApp);
-export const adminAuth = getAuth(adminApp);
-export default adminApp;
+// For backward compat — but only use in server-side code
+export { getAdminApp };
